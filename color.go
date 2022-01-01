@@ -12,12 +12,24 @@ var (
 	getColorProfile      sync.Once
 	explicitColorProfile bool
 	colorProfileMtx      sync.Mutex
-
-	// Because it's a potentially long operation (relatively speaking), we
-	// check the background color on initialization rather than at the last
-	// possible second.
-	hasDarkBackground = termenv.HasDarkBackground()
 )
+
+// HasDarkBackgroundConst determines if AdaptiveColor renders light or dark.
+// call DetectHasDarkBackground at startup
+//
+// defaults to true
+var HasDarkBackgroundConst bool = true
+
+// HasDarkBackground returns HasDarkBackgroundConst.
+func HasDarkBackground() bool {
+	return HasDarkBackgroundConst
+}
+
+// DetectHasDarkBackground detects if we have a dark background for all
+// AdapativeColor instances using termenv (stdout)
+func DetectHasDarkBackground() {
+	HasDarkBackgroundConst = termenv.HasDarkBackground()
+}
 
 // ColorProfile returns the detected termenv color profile. It will perform the
 // actual check only once.
@@ -51,11 +63,6 @@ func SetColorProfile(p termenv.Profile) {
 	defer colorProfileMtx.Unlock()
 	colorProfile = p
 	explicitColorProfile = true
-}
-
-// HadDarkBackground returns whether or not the terminal has a dark background.
-func HasDarkBackground() bool {
-	return hasDarkBackground
 }
 
 // TerminalColor is a color intended to be rendered in the terminal. It
